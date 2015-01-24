@@ -3,4 +3,7 @@ var secretKeyBase = {
   production: process.env.SECRET_KEY_BASE
 };
 
-exports.secretKeyBase = secretKeyBase;
+module.exports = {
+  secretKeyBase: secretKeyBase,
+  sessionKey: '_ca_session'
+};
