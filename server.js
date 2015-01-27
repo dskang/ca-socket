@@ -1,22 +1,28 @@
-var express = require('express'),
-    app = express(),
-    server = require('http').createServer(app),
-    io = require('socket.io').listen(server);
-    mongoose = require('mongoose'),
-    princeton = require('./server/princeton'),
-    conversation = require('./server/conversation'),
-    chatter = require('./server/chatter');
+var app = require('express')();
+var http = require('http').Server(app);
+// TODO: Consider forcing websocket as transport
+var io = require('socket.io')(http);
+
+var mongoose = require('mongoose');
+var princeton = require('./server/princeton');
+var conversation = require('./server/conversation');
+var chatter = require('./server/chatter');
+var config = require('./config');
+
+// Set up session decoder
+var sessionDecoder = require('./server/cookies-rails');
+var secretKeyBase = config.secretKeyBase[app.settings.env];
+var decoder = sessionDecoder(secretKeyBase)
 
 var port = process.env.PORT || 5000;
-server.listen(port);
+http.listen(port);
 
 var mongoUrl;
-io.configure('development', function() {
+if (app.settings.env == 'development') {
   mongoUrl = 'mongodb://localhost/test';
-});
-io.configure('production', function() {
+} else if (app.settings.env == 'production') {
   mongoUrl = process.env.MONGOHQ_URL;
-});
+}
 mongoose.connect(mongoUrl);
 
 var connectedUsers = {};
@@ -26,37 +32,33 @@ app.get('/count', function(req, res) {
   res.send(count.toString());
 });
 
-io.configure('production', function() {
-  io.set('log level', 1);
-  io.set('transports', ['websocket']);
+// Authorization
+io.use(function(socket, next) {
+  var email;
+  try {
+    email = getUserEmail(socket.request.headers.cookie);
+  } catch (e) {
+    next(e);
+    return;
+  }
 
-  io.set('authorization', function(handshakeData, callback) {
-    // Check if Princeton IP
-    var ipAddr = getClientIP(handshakeData);
-    var isValidIP = princeton.isValidIP(ipAddr);
-    if (!isValidIP) {
-      callback('Sorry, this site is only for Princeton students!', false);
-      return;
-    }
-
-    // Check if already connected to server
-    if (ipAddr in connectedUsers) {
-      callback('Sorry, you can only chat with one person at a time!', false);
-      return;
-    }
-
-    callback(null, true);
-  });
+  // Check that user is logged in
+  if (!email) {
+    next(new Error('Please sign in.'));
+    return;
+  }
+  // Check if already connected to server
+  if (email in connectedUsers) {
+    next(new Error('You can chat with only one person at a time.'));
+    return;
+  }
+  next();
 });
 
-// Needed to get the client's IP on Heroku for socket.io
-function getClientIP(handshakeData) {
-  var forwardedIps = handshakeData.headers['x-forwarded-for'];
-  if (forwardedIps) {
-    return forwardedIps.split(', ')[0];
-  } else {
-    return handshakeData.address.address;
-  }
+function getUserEmail(cookie) {
+  var session = getValueFromCookie(config.sessionKey, cookie);
+  var userData = decoder(session);
+  return userData['email'];
 }
 
 function getValueFromCookie(name, cookie) {
@@ -71,18 +73,11 @@ function getValueFromCookie(name, cookie) {
   }
 }
 
-io.sockets.on('connection', function(socket) {
-  var userID = getValueFromCookie('userID', socket.handshake.headers.cookie);
-  if (userID) {
-    // Add user to list of connected users
-    var ipAddr = getClientIP(socket.handshake);
-    connectedUsers[ipAddr] = true;
-    socket.on('disconnect', function() {
-      delete connectedUsers[ipAddr];
-    });
-
-    chatter.connectChatter(socket, userID);
-  } else {
-    socket.disconnect();
-  }
+io.on('connection', function(socket) {
+  var email = getUserEmail(socket.handshake.headers.cookie);
+  connectedUsers[email] = true;
+  socket.on('disconnect', function() {
+    delete connectedUsers[email];
+  });
+  chatter.connectChatter(socket, email);
 });
