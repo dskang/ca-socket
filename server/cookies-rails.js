@@ -26,7 +26,7 @@ module.exports = function(secretKeyBase, options) {
 
   defaults = {
     salt: 'encrypted cookie',
-    signed_salt: 'signed encrypted cookie',
+    signedSalt: 'signed encrypted cookie',
     iterations: 1000,
     keySize: 64,
     cipher: 'aes-256-cbc'
@@ -40,7 +40,7 @@ module.exports = function(secretKeyBase, options) {
 
   // generate keys
   var secret = crypto.pbkdf2Sync(secretKeyBase, options.salt, options.iterations, options.keySize / 2); // aes-256-cbc requires a 256 bit (32 byte) key
-  var signSecret = crypto.pbkdf2Sync(secretKeyBase, options.signed_salt, options.iterations, options.keySize);
+  var signSecret = crypto.pbkdf2Sync(secretKeyBase, options.signedSalt, options.iterations, options.keySize);
 
   var verify = function(message, expectedDigest) {
     var hmac = crypto.createHmac('sha1', signSecret);
