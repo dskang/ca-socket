@@ -1,4 +1,9 @@
-exports.list = [
+exports.getRandomQuestion = function() {
+  var randomIndex = Math.floor(Math.random() * questions.length);
+  return questions[randomIndex];
+};
+
+questions = [
   "What animal is your Patronus?",
   "If you ruled the world, what laws would you make?",
   "What was your last dream about?",
