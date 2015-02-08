@@ -3,8 +3,6 @@ var http = require('http').Server(app);
 // TODO: Consider forcing websocket as transport
 var io = require('socket.io')(http);
 
-var mongoose = require('mongoose');
-var princeton = require('./server/princeton');
 var conversation = require('./server/conversation');
 var chatter = require('./server/chatter');
 var config = require('./config');
@@ -16,14 +14,6 @@ var decoder = sessionDecoder(secretKeyBase)
 
 var port = process.env.PORT || 5000;
 http.listen(port);
-
-var mongoUrl;
-if (app.settings.env == 'development') {
-  mongoUrl = 'mongodb://localhost/test';
-} else if (app.settings.env == 'production') {
-  mongoUrl = process.env.MONGOHQ_URL;
-}
-mongoose.connect(mongoUrl);
 
 var connectedUsers = {};
 
@@ -79,5 +69,5 @@ io.on('connection', function(socket) {
   socket.on('disconnect', function() {
     delete connectedUsers[email];
   });
-  chatter.connectChatter(socket, email);
+  chatter.connectChatter(socket);
 });
