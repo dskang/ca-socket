@@ -10,7 +10,6 @@ function User(socket) {
   this.fbLink = null;
   var user = this;
 
-  // When one chatter disconnects, notify the partner and disconnect them
   this.socket.on('disconnect', function() {
     if (!user.partner) return;
 
@@ -18,7 +17,6 @@ function User(socket) {
     user.partner.socket.disconnect();
   });
 
-  // When a chat message is sent, display the chat message to both partners
   this.socket.on('chat message', function(data) {
     if (!user.partner) return;
 
@@ -34,7 +32,6 @@ function User(socket) {
     });
   });
 
-  // When the chatter opts to de-anonymize, show names if both partners have clicked
   this.socket.on('identity', function(data) {
     if (!user.partner) return;
 
@@ -55,13 +52,11 @@ function User(socket) {
     }
   });
 
-  // When the chatter is typing, notify the partner
   this.socket.on('typing', function() {
     if (!user.partner) return;
     user.partner.socket.emit('typing');
   });
 
-  // When the chatter is not typing, notify the partner
   this.socket.on('not typing', function() {
     if (!user.partner) return;
     user.partner.socket.emit('not typing');
@@ -71,12 +66,10 @@ function User(socket) {
 var queue = new Array();
 exports.connectChatter = function(socket) {
 
-  // On connection, create a new user and notify them of entrance/waiting
   var user = new User(socket);
   user.socket.emit('entrance');
   user.socket.emit('waiting');
 
-  // If there are no other waiting users, add the user to a queue
   if (queue.length === 0) {
     queue.push(user);
 
@@ -88,7 +81,6 @@ exports.connectChatter = function(socket) {
       }
     });
 
-  // If there is another user, pair the two users and display each of them a question
   } else {
     var partner = queue.shift();
     user.partner = partner;
