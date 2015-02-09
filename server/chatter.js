@@ -2,10 +2,9 @@ var questions = require('./questions');
 
 function User(socket) {
   this.socket = socket;
-  this.revealed = null;
+  this.revealed = false;
   this.partner = null;
   this.buttonClicked = false;
-  this.messagesSent = 0;
   this.name = null;
   this.fbLink = null;
   var user = this;
@@ -86,7 +85,7 @@ exports.connectChatter = function(socket) {
     user.partner = partner;
     partner.partner = user;
 
-    question = questions.getRandomQuestion()
+    question = questions.getRandomQuestion();
     user.socket.emit('matched', {
       question: question
     });
