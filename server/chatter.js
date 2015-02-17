@@ -19,7 +19,7 @@ function User(socket) {
   this.socket.on('chat message', function(data) {
     if (!user.partner) return;
 
-    var userName = user.revealed ? user.name : 'Anonymous Tiger';
+    var userName = user.revealed ? user.name : 'Anonymous Ivy';
 
     user.socket.emit('chat message', {
       name: 'You',
