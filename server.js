@@ -44,7 +44,15 @@ io.use(function(socket, next) {
   next();
 });
 
+function getRandomEmail() {
+  var randomString = Math.random().toString(36).substr(2, 5);
+  return randomString + '@example.edu';
+}
+
 function getUserEmail(cookie) {
+  if (app.settings.env === 'staging') {
+    return getRandomEmail();
+  }
   var session = getValueFromCookie(config.sessionKey, cookie);
   var userData = decoder(session);
   return userData['email'];
