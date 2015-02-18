@@ -33,12 +33,12 @@ io.use(function(socket, next) {
 
   // Check that user is logged in
   if (!email) {
-    next(new Error('Please sign in.'));
+    next(new Error('signInError'));
     return;
   }
   // Check if already connected to server
   if (email in connectedUsers) {
-    next(new Error('You can chat with only one person at a time.'));
+    next(new Error('multipleSessionsError'));
     return;
   }
   next();
