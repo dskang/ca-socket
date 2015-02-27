@@ -1,5 +1,6 @@
 var app = require('express')();
 var http = require('http').Server(app);
+var auth = require('basic-auth');
 // TODO: Consider forcing websocket as transport
 var io = require('socket.io')(http);
 
@@ -17,8 +18,14 @@ http.listen(port);
 var connectedUsers = {};
 
 app.get('/count', function(req, res) {
-  var count = Object.keys(connectedUsers).length;
-  res.send(count.toString());
+  var user = auth(req);
+  if (!user || user.name !== 'admin' || user.pass !== 'originblack') {
+    res.set('WWW-Authenticate', 'Basic realm="Campus Anonymous"');
+    res.status(401).end();
+  } else {
+    var count = Object.keys(connectedUsers).length;
+    res.send(count.toString());
+  }
 });
 
 // Authorization
