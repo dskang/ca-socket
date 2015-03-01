@@ -1,8 +1,9 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var auth = require('basic-auth');
-// TODO: Consider forcing websocket as transport
-var io = require('socket.io')(http);
+var io = require('socket.io')(http, {
+  transports: ['websocket']
+});
 
 var chatter = require('./server/chatter');
 var config = require('./config');
