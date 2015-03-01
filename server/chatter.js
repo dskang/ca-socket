@@ -1,7 +1,8 @@
 var questions = require('./questions');
 
-function User(socket) {
+function User(socket, email) {
   this.socket = socket;
+  this.email = email;
   this.revealed = false;
   this.partner = null;
   this.buttonClicked = false;
@@ -63,10 +64,12 @@ function User(socket) {
 }
 
 var queue = new Array();
-exports.connectChatter = function(socket) {
+exports.connectChatter = function(socket, email) {
 
-  var user = new User(socket);
-  user.socket.emit('entrance');
+  var user = new User(socket, email);
+  user.socket.emit('entrance', {
+    email: user.email
+  });
   user.socket.emit('waiting');
 
   if (queue.length === 0) {

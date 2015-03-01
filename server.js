@@ -84,5 +84,5 @@ io.on('connection', function(socket) {
   socket.on('disconnect', function() {
     delete connectedUsers[email];
   });
-  chatter.connectChatter(socket);
+  chatter.connectChatter(socket, email);
 });
