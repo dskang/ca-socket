@@ -99,7 +99,7 @@ exports.connectChatter = function(socket, email) {
     });
     partner.socket.emit('matched', {
       question: question,
-      partnerSchool: user.partner.school
+      partnerSchool: partner.partner.school
     });
   }
 };
