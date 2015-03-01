@@ -44,11 +44,13 @@ function User(socket, email) {
     if (user.partner.buttonClicked) {
       user.socket.emit('reveal', {
         name: user.partner.name,
-        link: user.partner.fbLink
+        link: user.partner.fbLink,
+        email: user.partner.email
       });
       user.partner.socket.emit('reveal', {
         name: user.name,
-        link: user.fbLink
+        link: user.fbLink,
+        email: user.email
       });
       user.revealed = true;
     }
