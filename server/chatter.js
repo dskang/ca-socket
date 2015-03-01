@@ -1,8 +1,10 @@
 var questions = require('./questions');
+var utils = require('./utils');
 
 function User(socket, email) {
   this.socket = socket;
   this.email = email;
+  this.school = utils.getSchool(email);
   this.revealed = false;
   this.partner = null;
   this.buttonClicked = false;
@@ -90,10 +92,12 @@ exports.connectChatter = function(socket, email) {
 
     question = questions.getRandomQuestion();
     user.socket.emit('matched', {
-      question: question
+      question: question,
+      partnerSchool: user.partner.school
     });
     partner.socket.emit('matched', {
-      question: question
+      question: question,
+      partnerSchool: user.partner.school
     });
   }
 };
