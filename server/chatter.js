@@ -22,17 +22,13 @@ function User(socket, email) {
   this.socket.on('chat message', function(data) {
     if (!user.partner) return;
 
-    var userName = user.revealed ? user.name : 'Anonymous';
-
     user.socket.emit('chat message', {
-      name: 'You',
-      message: data.message,
-      school: user.school
+      self: true,
+      message: data.message
     });
     user.partner.socket.emit('chat message', {
-      name: userName,
-      message: data.message,
-      school: user.school
+      self: false,
+      message: data.message
     });
   });
 
