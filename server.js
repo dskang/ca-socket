@@ -5,7 +5,8 @@ var io = require('socket.io')(http, {
   transports: ['websocket']
 });
 
-var chatter = require('./server/chatter');
+var User = require('./server/user');
+var chat = require('./server/chat');
 var config = require('./config');
 
 // Set up session decoder
@@ -84,5 +85,12 @@ io.on('connection', function(socket) {
   socket.on('disconnect', function() {
     delete connectedUsers[email];
   });
-  chatter.connectChatter(socket, email);
+
+  var user = new User(socket, email);
+  socket.on('new session', function() {
+    chat.newSession(user);
+  });
+  socket.on('resume session', function() {
+    chat.resumeSession(user);
+  });
 });

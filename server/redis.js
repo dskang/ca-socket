@@ -1,5 +1,5 @@
-var redis = require("redis");
-var url = require("url");
+var redis = require('redis');
+var url = require('url');
 
 var client;
 if (process.env.REDISTOGO_URL) {

@@ -1,20 +1,33 @@
-var questions = require('./questions');
 var utils = require('./utils');
+var redis = require('./redis');
 
 function User(socket, email) {
   this.socket = socket;
   this.email = email;
   this.school = utils.getSchool(email);
-  this.revealed = false;
   this.partner = null;
+  this.partnerEmail = null;
   this.buttonClicked = false;
   this.name = null;
   this.fbLink = null;
+
+  this.setPartner = function(partner) {
+    this.partner = partner;
+    this.partnerEmail = partner.email;
+    redis.hset(this.email, 'partnerEmail', partner.email);
+  }
+
+  this.restore = function(savedUser) {
+    for (var attr in savedUser) {
+      this[attr] = savedUser[attr];
+    }
+  }
+
   var user = this;
-
   this.socket.on('disconnect', function() {
-    if (!user.partner) return;
+    redis.del(user.email);
 
+    if (!user.partner) return;
     user.partner.socket.emit('finished');
     user.partner.socket.disconnect();
   });
@@ -38,6 +51,11 @@ function User(socket, email) {
     user.name = data.name;
     user.fbLink = data.link;
     user.buttonClicked = true;
+    redis.hmset(user.email,
+      'name', user.name,
+      'fbLink', user.fbLink,
+      'buttonClicked', user.buttonClicked
+    );
 
     if (user.partner.buttonClicked) {
       user.socket.emit('reveal', {
@@ -50,7 +68,6 @@ function User(socket, email) {
         link: user.fbLink,
         email: user.email
       });
-      user.revealed = true;
     }
   });
 
@@ -65,39 +82,4 @@ function User(socket, email) {
   });
 }
 
-var queue = new Array();
-exports.connectChatter = function(socket, email) {
-
-  var user = new User(socket, email);
-  user.socket.emit('entrance', {
-    email: user.email
-  });
-  user.socket.emit('waiting');
-
-  if (queue.length === 0) {
-    queue.push(user);
-
-    // TODO: remove listener instead of checking index
-    user.socket.on('disconnect', function() {
-      var index = queue.indexOf(user);
-      if (index !== -1) {
-        queue.splice(index, 1);
-      }
-    });
-
-  } else {
-    var partner = queue.shift();
-    user.partner = partner;
-    partner.partner = user;
-
-    question = questions.getRandomQuestion();
-    user.socket.emit('matched', {
-      question: question,
-      partnerSchool: user.partner.school
-    });
-    partner.socket.emit('matched', {
-      question: question,
-      partnerSchool: partner.partner.school
-    });
-  }
-};
+module.exports = User;
