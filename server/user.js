@@ -15,6 +15,8 @@ function User(socket, email) {
     this.partner = partner;
     this.partnerEmail = partner.email;
     redis.hset(this.email, 'partnerEmail', partner.email);
+    // Expire user in 24h in case they disconnect when server is down
+    redis.expire(this.email, 60 * 60 * 24);
   }
 
   this.restore = function(savedUser) {
